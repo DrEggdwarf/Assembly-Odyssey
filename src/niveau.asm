@@ -17,6 +17,8 @@ public Lab_Hauteur
 public Joueur_Col
 public Joueur_Lig
 
+extrn Generer_Niveau:near        ; genmaze.asm
+
 include TAILLES.INC
 
 VUE              equ 80h ; 1000 0000 en binaire
@@ -46,6 +48,7 @@ Charger_Niveau:
 
 Niveau_Dynamique: ; ici la porte d'entree pour niveau dynamique a faire
 	mov  AL, 0
+	call Generer_Niveau
 	ret
 
 Niveau_Statique:
@@ -114,7 +117,7 @@ Numero_Case:
 	mul  Lab_Largeur     ; AX x Lab_Largeur = 44 x 57 = 2508
 	add  AX, CX          ; + colonne = 2508 + 11 = 2519
 	mov  BX, AX          ; BX = 2519 = place dans Grille
-	pop  DX              ; AX et DX rendus intacts
+	pop  DX 
 	pop  AX
 	ret
 
@@ -139,7 +142,7 @@ Lire_Case:
 	jne  Hors_Niveau
 	call Numero_Case
 	mov  AL, Grille[BX]  ; AL = 1100 0100      ( ex : 'D' deja vue )
-	and  AL, 7Fh         ; AL = 0100 0100 = 'D' ( and 0111 1111 : bit 7 efface )
+	and  AL, 7Fh         ; AL sans le bit 7 ( masque 0111 1111 ) donc AL = 'D'
 	ret
 Hors_Niveau:
 	mov  AL, ' '
@@ -150,7 +153,7 @@ Marquer_Vue:
 	cmp  AL, 1
 	jne  Fin_Marquer
 	call Numero_Case
-	or   Grille[BX], VUE ; 0100 0100 -> 1100 0100 ( or 1000 0000 : bit 7 allume )
+	or   Grille[BX], VUE ; marque le bit 7 avec 1 en gardant les 7 premiers bits intacts
 Fin_Marquer:
 	ret
 

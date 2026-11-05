@@ -27,6 +27,8 @@ masm /Iinc /Ilib src\bandeau,build\bandeau,build\bandeau;
 if errorlevel 1 goto err
 masm /Iinc /Ilib src\carte,build\carte,build\carte;
 if errorlevel 1 goto err
+masm /Iinc /Ilib src\genmaze,build\genmaze,build\genmaze;
+if errorlevel 1 goto err
 link @odyssey.lnk
 if errorlevel 1 goto err
 echo Build OK : build\ODYSSEY.EXE

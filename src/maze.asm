@@ -27,6 +27,8 @@ extrn Dessiner_Bandeau:near     ; bandeau.asm
 extrn Dessiner_Carte:near       ; carte.asm
 extrn Carte_Joueur:near         ; carte.asm
 
+extrn Generer_Niveau:near       ; genmaze.asm
+
 NIVEAU_DEPART    equ 1
 FLECHE_GAUCHE    equ 4Bh
 FLECHE_DROITE    equ 4Dh
@@ -72,6 +74,13 @@ Boucle_Touches:
 	je   Boucle_Touches
 	mov  Joueur_Col, CX
 	mov  Joueur_Lig, DX
+
+; porte de sortie : le joueur est sur E -> genmaze
+	call Lire_Case       ; AL = caractere de la case du joueur ( CX, DX )
+	cmp  AL, 'E'
+	jne  Pas_Sortie
+	call Generer_Niveau
+Pas_Sortie:
 	call Voir_Autour
 	jmp  Boucle_Touches
 

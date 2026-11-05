@@ -1,3 +1,3 @@
 build\odyssey+build\mainscr+build\maze+build\niveau+build\habille+build\vision+
-build\bandeau+build\carte+build\libao+build\libmus+build\libopl+build\libgfx
+build\bandeau+build\carte+build\genmaze+build\libao+build\libmus+build\libopl+build\libgfx
 build\odyssey;
