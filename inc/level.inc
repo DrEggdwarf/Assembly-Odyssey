@@ -23,8 +23,7 @@
 
 ;****************************************
                   
-; lvl1 : B1F d'Etrian Odyssey 1 (tools/eo/carte_eo.py B01F), clairiere de sortie
-; ajoutee en haut a gauche (4 lignes de plus)
+; lvl1 : d'apres l'etage B1F d'Etrian Odyssey 1
 lvl1    DB 57, 50, 0
         DB '#########################################################'
         DB '#.....###################################################'
