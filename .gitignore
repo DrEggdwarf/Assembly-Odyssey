@@ -1,0 +1,12 @@
+# Sorties du build
+build/
+
+# Outillage et tests : gardes en local
+tests/
+tools/
+
+# Musique d'intro : Syrcus Tower (Final Fantasy III, Square Enix), non diffusable
+assets/sounds/INTRO.VGM
+
+# Python
+__pycache__/
