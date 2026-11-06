@@ -10,6 +10,8 @@ extrn Est_Mur:near
 extrn Est_Vue:near
 extrn Marquer_Vue:near
 extrn Dans_Niveau:near
+extrn Lire_Case:near
+extrn Ecrire_Case:near
 extrn Joueur_Col:word
 extrn Joueur_Lig:word
 
@@ -17,69 +19,171 @@ extrn Classe_Niveau:near
 
 extrn Carte_Case:near
 
-LAMPE            equ 4
-FIN_VOISINES     equ 8 * 2
+FIN_VOISINES     equ 8 * 4
 
 donnees segment public
-include VISION.INC
+Voisines         DW  0, -1          ; N
+                 DW  1, -1          ; NE
+                 DW  1,  0          ; E
+                 DW  1,  1          ; SE
+                 DW  0,  1          ; S
+                 DW -1,  1          ; SO
+                 DW -1,  0          ; O
+                 DW -1, -1          ; NO
+Voisine          DW  0         
+Voisine_Mur      DW  0    
 
-Voisin_Dx        DW  0,  1,  1,  1,  0, -1, -1, -1
-Voisin_Dy        DW -1, -1,  0,  1,  1,  1,  0, -1
-Voisine          DW  0
-Voisine_Mur      DW  0
-Reste_Disque     DW  0
-Case_Disque      DW  0
-Cible_Dx         DW  0
-Cible_Dy         DW  0
-
-Abs_Dx           DW  0
-Abs_Dy           DW  0
-Pas_X            DW  0
-Pas_Y            DW  0
-Erreur           DW  0
-Ligne_X          DW  0
-Ligne_Y          DW  0
+; Decouvrir_Autour : 1 si la case a 1 pas est du sol
+Sol_N            DB  0
+Sol_E            DB  0
+Sol_S            DB  0
+Sol_O            DB  0
 donnees ends
 
 code    segment public
 assume  cs:code,ds:donnees
 
+
+; ce que voit le joueur : les cases de sol a 2 pas au plus
+;
+;             N2
+;         NO  N1  NE
+;     O2  O1  J   E1  E2
+;         SO  S1  SE
+;             S2
+;
+; ex : le joueur est en case 11, 44
 Decouvrir_Autour:
-	mov  BX, offset disque
-	mov  AX, [BX]
-	mov  Reste_Disque, AX
-	add  BX, 2
-	mov  Case_Disque, BX
-Case_Suivante:
-	mov  BX, Case_Disque
-	mov  AX, [BX]
-	mov  Cible_Dx, AX
-	mov  AX, [BX+2]
-	mov  Cible_Dy, AX
-	add  Case_Disque, 4
+; la case du joueur
 	mov  CX, Joueur_Col
-	add  CX, Cible_Dx
 	mov  DX, Joueur_Lig
-	add  DX, Cible_Dy
-	call Dans_Niveau
+	call Voir_Si_Sol
+
+; a 1 pas : N1, E1, S1, O1 ( on retient si c'est du sol )
+	mov  CX, Joueur_Col    ; CX = 11
+	mov  DX, Joueur_Lig    ; DX = 44
+	dec  DX                ; DX = 43 : N1 = case 11, 43
+	call Voir_Si_Sol
+	mov  Sol_N, AL         ; Sol_N = 1 si N1 est du sol
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	inc  CX
+	call Voir_Si_Sol
+	mov  Sol_E, AL
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	inc  DX
+	call Voir_Si_Sol
+	mov  Sol_S, AL
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	dec  CX
+	call Voir_Si_Sol
+	mov  Sol_O, AL
+
+; a 2 pas en ligne droite : N2, E2, S2, O2, si la case entre les deux est du sol
+	cmp  Sol_N, 1
+	jne  Pas_N2
+	mov  CX, Joueur_Col    ; CX = 11
+	mov  DX, Joueur_Lig
+	sub  DX, 2             ; DX = 42 : N2 = case 11, 42
+	call Voir_Si_Sol
+Pas_N2:
+	cmp  Sol_E, 1
+	jne  Pas_E2
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	add  CX, 2
+	call Voir_Si_Sol
+Pas_E2:
+	cmp  Sol_S, 1
+	jne  Pas_S2
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	add  DX, 2
+	call Voir_Si_Sol
+Pas_S2:
+	cmp  Sol_O, 1
+	jne  Pas_O2
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	sub  CX, 2
+	call Voir_Si_Sol
+Pas_O2:
+
+; en diagonale : NE, SE, SO, NO, si une des deux cases qui y menent est du sol
+	mov  AL, Sol_N
+	or   AL, Sol_E         ; AL = 1 si N1 ou E1 est du sol
 	cmp  AL, 1
-	jne  Pas_Vue
-	call Est_Vue
+	jne  Pas_NE
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	inc  CX                ; CX = 12
+	dec  DX                ; DX = 43 : NE = case 12, 43
+	call Voir_Si_Sol
+Pas_NE:
+	mov  AL, Sol_S
+	or   AL, Sol_E
 	cmp  AL, 1
-	je   Pas_Vue
-	push CX
-	push DX
-	call Ligne_Libre
-	pop  DX
-	pop  CX
+	jne  Pas_SE
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	inc  CX
+	inc  DX
+	call Voir_Si_Sol
+Pas_SE:
+	mov  AL, Sol_S
+	or   AL, Sol_O
 	cmp  AL, 1
-	jne  Pas_Vue
-	call Voir_Case
-Pas_Vue:
-	dec  Reste_Disque
-	jnz  Case_Suivante
+	jne  Pas_SO
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	dec  CX
+	inc  DX
+	call Voir_Si_Sol
+Pas_SO:
+	mov  AL, Sol_N
+	or   AL, Sol_O
+	cmp  AL, 1
+	jne  Pas_NO
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	dec  CX
+	dec  DX
+	call Voir_Si_Sol
+Pas_NO:
+
+; sur une clairiere pas encore devoilee ( + ) : toute la clairiere
+	mov  CX, Joueur_Col
+	mov  DX, Joueur_Lig
+	call Lire_Case
+	cmp  AL, '+'
+	jne  Fin_Decouvrir
+	call Devoiler_Salle
+Fin_Decouvrir:
 	ret
 
+; CX, DX = une case : si c'est du sol pas encore vu, Voir_Case
+; AL = 1 si c'est du sol, 0 sinon
+Voir_Si_Sol:
+	call Est_Mur
+	cmp  AL, 1
+	je   Pas_Sol
+	call Est_Vue
+	cmp  AL, 1
+	je   Sol_Deja_Vu
+	call Voir_Case
+Sol_Deja_Vu:
+	mov  AL, 1
+	ret
+Pas_Sol:
+	mov  AL, 0
+	ret
+
+
+; M = mur visible
+; S = sol
+; V = decor visible
 Voir_Case:
 	call Marquer_Vue
 	push CX
@@ -87,16 +191,7 @@ Voir_Case:
 	call Carte_Case
 	pop  DX
 	pop  CX
-	call Classe_Niveau
-	cmp  AL, 'M'
-	je   Mur_Vu
-	cmp  AL, 'S'
-	jne  Fin_Voir_Case
 	call Murs_Autour
-	ret
-Mur_Vu:
-	call Decor_Autour
-Fin_Voir_Case:
 	ret
 
 Murs_Autour:
@@ -104,15 +199,12 @@ Murs_Autour:
 Voisine_Murs:
 	push CX
 	push DX
-	mov  BX, Voisine_Mur
-	add  CX, Voisin_Dx[BX]
-	add  DX, Voisin_Dy[BX]
+	mov  BX, Voisine_Mur   ; BX = 4              
+	add  CX, Voisines[BX]  ; CX = 11 + 1 = 12
+	add  DX, Voisines[BX+2] ; DX = 43 - 1 = 42
 	call Classe_Niveau
 	cmp  AL, 'M'
 	jne  Pas_Mur_Autour
-	call Est_Vue
-	cmp  AL, 1
-	je   Pas_Mur_Autour
 	call Marquer_Vue
 	push CX
 	push DX
@@ -123,8 +215,8 @@ Voisine_Murs:
 Pas_Mur_Autour:
 	pop  DX
 	pop  CX
-	add  Voisine_Mur, 2
-	cmp  Voisine_Mur, FIN_VOISINES
+	add  Voisine_Mur, 4    ; Voisine_Mur = 8 : la voisine E ( une paire = 4 octets )
+	cmp  Voisine_Mur, FIN_VOISINES ; 8 voisines x 4 octets = 32 : fin de la boucle
 	jne  Voisine_Murs
 	ret
 
@@ -134,8 +226,8 @@ Voisine_Decor:
 	push CX
 	push DX
 	mov  BX, Voisine
-	add  CX, Voisin_Dx[BX]
-	add  DX, Voisin_Dy[BX]
+	add  CX, Voisines[BX]
+	add  DX, Voisines[BX+2]
 	call Classe_Niveau
 	cmp  AL, 'V'
 	jne  Pas_Decor
@@ -143,78 +235,37 @@ Voisine_Decor:
 Pas_Decor:
 	pop  DX
 	pop  CX
-	add  Voisine, 2
+	add  Voisine, 4
 	cmp  Voisine, FIN_VOISINES
 	jne  Voisine_Decor
 	ret
 
-Ligne_Libre:
-	mov  AX, Cible_Dx
-	mov  Pas_X, 1
-	cmp  AX, 0
-	jg   Dx_Positif
-	neg  AX
-	mov  Pas_X, -1
-Dx_Positif:
-	mov  Abs_Dx, AX
-	mov  AX, Cible_Dy
-	mov  Pas_Y, 1
-	cmp  AX, 0
-	jg   Dy_Positif
-	neg  AX
-	mov  Pas_Y, -1
-Dy_Positif:
-	mov  Abs_Dy, AX
-	mov  AX, Abs_Dx
-	sub  AX, Abs_Dy
-	mov  Erreur, AX
-	mov  Ligne_X, 0
-	mov  Ligne_Y, 0
-Pas_Ligne:
-	mov  AX, Ligne_X
-	cmp  AX, Cible_Dx
-	jne  Avancer
-	mov  AX, Ligne_Y
-	cmp  AX, Cible_Dy
-	jne  Avancer
-	mov  AL, 1
+; CX, DX = une case de clairiere ( + ) : elle est vue et devient du sol ( . ),
+; puis ses 4 voisines ; une voisine de sol qui n'est pas un + ( E, D, un couloir )
+; est vue aussi, sans aller plus loin
+; ( la routine s'appelle elle-meme, de case en case, jusqu'au bord de la clairiere )
+Devoiler_Salle:
+	call Lire_Case
+	cmp  AL, '+'
+	je   Case_Clairiere
+	call Voir_Si_Sol       ; le bord : vu, mais on s'arrete la
 	ret
-Avancer:
-	mov  BX, Erreur
-	add  BX, BX
-	mov  AX, BX
-	add  AX, Abs_Dy
-	cmp  AX, 0
-	jle  Pas_En_X
-	mov  AX, Abs_Dy
-	sub  Erreur, AX
-	mov  AX, Pas_X
-	add  Ligne_X, AX
-Pas_En_X:
-	cmp  BX, Abs_Dx
-	jge  Pas_En_Y
-	mov  AX, Abs_Dx
-	add  Erreur, AX
-	mov  AX, Pas_Y
-	add  Ligne_Y, AX
-Pas_En_Y:
-	mov  AX, Ligne_X
-	cmp  AX, Cible_Dx
-	jne  Tester_Case
-	mov  AX, Ligne_Y
-	cmp  AX, Cible_Dy
-	je   Pas_Ligne
-Tester_Case:
-	mov  CX, Joueur_Col
-	add  CX, Ligne_X
-	mov  DX, Joueur_Lig
-	add  DX, Ligne_Y
-	call Est_Mur
-	cmp  AL, 1
-	je   Ligne_Coupee
-	jmp  Pas_Ligne
-Ligne_Coupee:
-	mov  AL, 0
+Case_Clairiere:
+	mov  AL, '.'
+	call Ecrire_Case       ; devoilee : ce n'est plus un +
+	call Voir_Si_Sol
+	dec  DX
+	call Devoiler_Salle    ; N
+	inc  DX
+	inc  CX
+	call Devoiler_Salle    ; E
+	dec  CX
+	inc  DX
+	call Devoiler_Salle    ; S
+	dec  DX
+	dec  CX
+	call Devoiler_Salle    ; O
+	inc  CX
 	ret
 
 code    ends

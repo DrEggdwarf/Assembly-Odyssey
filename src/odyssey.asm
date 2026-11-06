@@ -9,7 +9,7 @@ extrn Ecran_Titre:near
 extrn Ecran_Labyrinthe:near
 
 pile    segment stack
-        dw 256 dup(?) ; 512 octet reserve
+        dw 2048 dup(?) ; 4096 octets reserves ( Devoiler_Salle s'appelle elle-meme )
 pile    ends ; ends ?
 
 donnees segment public

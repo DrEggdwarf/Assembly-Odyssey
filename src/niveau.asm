@@ -7,6 +7,7 @@
 public Charger_Niveau
 public Numero_Case
 public Lire_Case
+public Ecrire_Case
 public Est_Mur
 public Marquer_Vue
 public Dans_Niveau
@@ -146,6 +147,19 @@ Lire_Case:
 	ret
 Hors_Niveau:
 	mov  AL, ' '
+	ret
+
+; CX, DX = une case, AL = le caractere a y ecrire ( le bit 7 VUE est garde )
+Ecrire_Case:
+	push AX
+	call Dans_Niveau
+	cmp  AL, 1
+	pop  AX              ; pop ne touche pas aux drapeaux du cmp
+	jne  Fin_Ecrire
+	call Numero_Case
+	and  Grille[BX], VUE ; on garde le bit 7 seul
+	or   Grille[BX], AL  ; puis le caractere
+Fin_Ecrire:
 	ret
 
 Marquer_Vue:
