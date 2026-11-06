@@ -240,10 +240,7 @@ Pas_Decor:
 	jne  Voisine_Decor
 	ret
 
-; CX, DX = une case de clairiere ( + ) : elle est vue et devient du sol ( . ),
-; puis ses 4 voisines ; une voisine de sol qui n'est pas un + ( E, D, un couloir )
-; est vue aussi, sans aller plus loin
-; ( la routine s'appelle elle-meme, de case en case, jusqu'au bord de la clairiere )
+; CX, DX = une case de clairiere ( + ) : elle est vue et devient du sol ( . )
 Devoiler_Salle:
 	call Lire_Case
 	cmp  AL, '+'
