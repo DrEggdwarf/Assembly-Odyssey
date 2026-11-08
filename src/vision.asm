@@ -9,7 +9,6 @@ public Decouvrir_Autour
 extrn Est_Mur:near
 extrn Est_Vue:near
 extrn Marquer_Vue:near
-extrn Dans_Niveau:near
 extrn Lire_Case:near
 extrn Ecrire_Case:near
 extrn Joueur_Col:word
@@ -17,7 +16,8 @@ extrn Joueur_Lig:word
 
 extrn Classe_Niveau:near
 
-extrn Carte_Case:near
+extrn Carte_Sol:near
+extrn Carte_Mur:near
 
 FIN_VOISINES     equ 8 * 4
 
@@ -31,7 +31,7 @@ Voisines         DW  0, -1          ; N
                  DW -1,  0          ; O
                  DW -1, -1          ; NO
 Voisine          DW  0         
-Voisine_Mur      DW  0    
+Voisine_Mur      DW  0          ; a part : Decor_Autour tourne a l'interieur de Murs_Autour
 
 ; Decouvrir_Autour : 1 si la case a 1 pas est du sol
 Sol_N            DB  0
@@ -181,19 +181,13 @@ Pas_Sol:
 	ret
 
 
-; M = mur visible
-; S = sol
-; V = decor visible
 Voir_Case:
 	call Marquer_Vue
-	push CX
-	push DX
-	call Carte_Case
-	pop  DX
-	pop  CX
+	call Carte_Sol           ; Voir_Si_Sol ne l'appelle que pour du sol
 	call Murs_Autour
 	ret
 
+; M = mur qui touche du sol, V = mur qui n'en touche pas ( le decor ), S = sol
 Murs_Autour:
 	mov  Voisine_Mur, 0
 Voisine_Murs:
@@ -206,11 +200,7 @@ Voisine_Murs:
 	cmp  AL, 'M'
 	jne  Pas_Mur_Autour
 	call Marquer_Vue
-	push CX
-	push DX
-	call Carte_Case
-	pop  DX
-	pop  CX
+	call Carte_Mur
 	call Decor_Autour
 Pas_Mur_Autour:
 	pop  DX

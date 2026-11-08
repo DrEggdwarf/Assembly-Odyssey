@@ -13,7 +13,7 @@ public Lancer_Fondu
 public Assombrir_Palette
 public Num_Trame
 
-PAS_FONDU        equ 63
+PAS_FONDU        equ 63 ; composante max du DAC ( 6 bits ) : le noir en 63 pas
 
 donnees segment public
 include TITRE.INC
@@ -45,8 +45,6 @@ Ecran_Titre:
 	mov  Pal_Premiere, 0
 	mov  Pal_Nombre, TITRE_PAL_N
 	call Charger_Palette
-	mov  Num_Trame, 0
-	mov  Fondu_Restant, 0
 	mov  DX, offset Nom_Musique
 	call Ouvrir_Musique
 Boucle_Titre:
@@ -142,10 +140,7 @@ Animer_Titre:
 Rallumer_Press:
 	mov  Pal_Table, offset titre_palette + PRESS*3
 	mov  Pal_Premiere, PRESS
-	mov  Pal_Nombre, 1
-	call Charger_Palette
-	mov  Pal_Table, offset titre_palette + PRESS_OMBRE*3
-	mov  Pal_Premiere, PRESS_OMBRE
+	mov  Pal_Nombre, 2       ; PRESS et PRESS_OMBRE, qui suit
 	call Charger_Palette
 Fin_Anim:
 	ret

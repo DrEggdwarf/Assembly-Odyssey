@@ -1,7 +1,7 @@
 ;****************************************
 ;   Assembly Odyssey : habillage du niveau
 ; =======================================
-;
+; Aidé de l'ia pour la logique de masque et appliquer les sprites ( en lien avec blob.inc )
 ;****************************************
 include LIBAO.INC
 
@@ -18,14 +18,15 @@ extrn Lab_Hauteur:word
 
 include TAILLES.INC
 
-NB_BLOBS         equ 47 ; blob = la forme d'une case selon ses 8 voisines : 47 formes
-ROLE_SOL         equ 0  ; role = ce que la case montre : sol, dessus, face haute, face basse
-                        ; chaque role a ses 47 tuiles dans monde1_cat, a partir de :
-                        ;   sol = 0
-ROLE_DESSUS      equ ROLE_SOL + NB_BLOBS        ; dessus de mur = 47
-ROLE_FACE_HAUTE  equ ROLE_DESSUS + NB_BLOBS     ; face haute = 94
-ROLE_FACE_BASSE  equ ROLE_FACE_HAUTE + NB_BLOBS ; face basse ( troncs ) = 141
-FIN_VOISINES     equ 8 * 2 ; 8 voisines x 2 octets ( tables DW ) : fin de la boucle
+NB_BLOBS         equ 47 ; 47 formes par role ( selon les 8 voisines )
+ROLE_SOL         equ 0
+
+
+; chaque role occupe 47 lignes de monde1_cat : numero du role x 47 ( 0, 47, 94, 141 )
+ROLE_DESSUS      equ ROLE_SOL + NB_BLOBS
+ROLE_FACE_HAUTE  equ ROLE_DESSUS + NB_BLOBS
+ROLE_FACE_BASSE  equ ROLE_FACE_HAUTE + NB_BLOBS
+FIN_VOISINES     equ 8 * 2  ; 8 voisines x 2 octets ( DW )
 
 donnees segment public
 include MONDE1.INC
@@ -33,7 +34,7 @@ include BLOB.INC
 Classes          DB  GRILLE_MAX dup(0)
 
 
-; les 8 voisines dans l'ordre N NE E SE S SO O NO ( pour Classe_Case )
+; les 8 voisines dans l'ordre N NE E SE S SO O NO
 Voisin_Col       DW  0,  1,  1,  1,  0, -1, -1, -1  ; deplacement en colonne
 Voisin_Lig       DW -1, -1,  0,  1,  1,  1,  0, -1  ; deplacement en ligne
 Voisine          DW  0                             ; la voisine en cours x 2
@@ -138,8 +139,6 @@ Chercher_Role:
 	cmp  AL, 'S'
 	je   Fin_Role
 	mov  Role, ROLE_DESSUS
-	cmp  AL, 'M'
-	jne  Fin_Role
 	add  DX, 2
 	call Classe_Niveau
 	sub  DX, 2
@@ -243,7 +242,7 @@ Choisir_Tuile:
 	cmp  Role, ROLE_FACE_BASSE
 	jne  Tuile_Variante
 	mov  AL, Masque
-	and  AL, 44h
+	and  AL, 44h             ; 44h = E ( 4 ) + O ( 64 ) : murs a l'est et a l'ouest
 	cmp  AL, 44h
 	jne  Tuile_Variante
 	mov  BX, CX
@@ -276,7 +275,7 @@ Hache:
 	mov  AL, hache_perm[BX]
 	add  AL, CL
 	and  AL, 15
-	mov  BL, AL
+	mov  BL, AL              ; BH = 0 depuis and BX, 15
 	mov  AL, hache_perm[BX]
 	ret
 

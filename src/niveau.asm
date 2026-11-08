@@ -13,6 +13,7 @@ public Marquer_Vue
 public Dans_Niveau
 public Est_Vue
 
+public Grille
 public Lab_Largeur
 public Lab_Hauteur
 public Joueur_Col
@@ -32,7 +33,7 @@ Grille           DB  GRILLE_MAX dup(0) ; le niveau, 1 octet a 0 par case
 Lab_Largeur      DW  0             
 Lab_Hauteur      DW  0
 
-;position de départ du joueur
+;position du joueur
 Joueur_Col       DW  0              
 Joueur_Lig       DW  0
 Lab_Type         DB  0              ; 0 = statique 1 = aleatoire
@@ -46,15 +47,11 @@ Charger_Niveau:
 	call Lire_Entete
 	cmp  Lab_Type, 0
 	je   Niveau_Statique
-
-Niveau_Dynamique: ; ici la porte d'entree pour niveau dynamique a faire
-	mov  AL, 0
-	call Generer_Niveau
+	call Generer_Niveau      ; aleatoire : genmaze.asm
 	ret
 
 Niveau_Statique:
 	call Copier_Trace
-	mov  AL, 1
 	ret
 
 ; entree : AX = numero du niveau

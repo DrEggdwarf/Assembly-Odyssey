@@ -1,7 +1,7 @@
 ;****************************************
 ;   Assembly Odyssey
 ; =======================================
-; Boucle du jeux 
+; programme principal
 ;****************************************
 include LIBGFX.INC
 
@@ -10,9 +10,9 @@ extrn Ecran_Labyrinthe:near
 
 pile    segment stack
         dw 2048 dup(?) ; 4096 octets reserves ( Devoiler_Salle s'appelle elle-meme )
-pile    ends ; ends ?
+pile    ends
 
-donnees segment public
+donnees segment public ; vide, mais obligatoire pour mov AX, donnees
 donnees ends
 
 code    segment public

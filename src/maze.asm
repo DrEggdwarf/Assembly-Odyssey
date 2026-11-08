@@ -23,13 +23,13 @@ extrn Preparer_Affichage:near   ; habille.asm
 extrn Tuile_Case:near           ; habille.asm
 
 extrn Dessiner_Bandeau:near     ; bandeau.asm
+extrn Niveau_Suivant:near       ; bandeau.asm
 
 extrn Dessiner_Carte:near       ; carte.asm
 extrn Carte_Joueur:near         ; carte.asm
 
-extrn Generer_Niveau:near       ; genmaze.asm
-
 NIVEAU_DEPART    equ 1
+NIVEAU_ALEATOIRE equ 2          ; lvl2 : l'en-tete des niveaux generes par genmaze
 FLECHE_GAUCHE    equ 4Bh
 FLECHE_DROITE    equ 4Dh
 FLECHE_HAUT      equ 48h
@@ -53,19 +53,19 @@ code    segment public
 assume  cs:code,ds:donnees
 
 Ecran_Labyrinthe:
+; pas Video13h : il ecraserait BaseVMode, le mode texte que VideoCMD remet en sortant
 	mov  AH, 0          ; AX = | 00 | ?? | : fonction 0 = changer de mode video
 	mov  AL, 13h        ; AX = | 00 | 13 | : mode 13h ( 320 x 200 )
 	int  10h
+	mov  AX, NIVEAU_DEPART
 	call Demarrer_Niveau
-	cmp  AL, 1
-	jne  Fin_Labyrinthe
 
 Boucle_Touches:
 	call WaitKey ; libgfx.asm
 	cmp  userinput, ECHAP
 	je   Fin_Labyrinthe
 
-	cmp  userinput, 0 ; 0 = fleche
+	cmp  userinput, 0 ; 0 = touche etendue ( les fleches ) : son code suit
 	jne  Boucle_Touches
 	call WaitKey
 	call Lire_Fleche
@@ -79,7 +79,10 @@ Boucle_Touches:
 	call Lire_Case       ; AL = caractere de la case du joueur ( CX, DX )
 	cmp  AL, 'E'
 	jne  Pas_Sortie
-	call Generer_Niveau
+	call Niveau_Suivant      ; bandeau.asm : Niveau 02, 03 ...
+	mov  AX, NIVEAU_ALEATOIRE
+	call Demarrer_Niveau
+	jmp  Boucle_Touches
 Pas_Sortie:
 	call Voir_Autour
 	jmp  Boucle_Touches
@@ -87,12 +90,9 @@ Pas_Sortie:
 Fin_Labyrinthe:
 	ret
 
-; charge le niveau et dessine tout ( AL = 1 : niveau charge )
+; AX = numero du niveau : le charge et dessine tout
 Demarrer_Niveau:
-	mov  AX, NIVEAU_DEPART
 	call Charger_Niveau
-	cmp  AL, 1
-	jne  Fin_Demarrer
 	call Charger_Monde  ; couleurs de monde1.inc
 	mov  Pal_Table, offset joueur_palette
 	mov  Pal_Premiere, JOUEUR_PAL_1
@@ -102,8 +102,6 @@ Demarrer_Niveau:
 	call Dessiner_Carte
 	call Preparer_Affichage
 	call Voir_Autour
-	mov  AL, 1
-Fin_Demarrer:
 	ret
 
 ; la fleche lue dans userinput donne la case visee
@@ -211,7 +209,7 @@ Dessiner_Case:
 	jne  Case_Noire
 	call Tuile_Case
 	call Dessiner_Tuile
-	mov  CX, Case_Col
+	mov  CX, Case_Col        ; Dessiner_Tuile ecrase CX et DX
 	mov  DX, Case_Lig
 	call Lire_Case
 	cmp  AL, 'E'
@@ -221,7 +219,6 @@ Dessiner_Case:
 Fin_Case:
 	ret
 Case_Noire:
-	mov  AL, COULEUR_VIDE
 	call Dessiner_Noir
 	ret
 

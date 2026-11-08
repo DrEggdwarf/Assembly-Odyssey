@@ -10,6 +10,7 @@ public Couper_Son
 code    segment public
 assume  cs:code
 
+; AH = registre, AL = valeur, DX = port d'adresse ( la valeur part en DX + 1 )
 Ecrire_Puce:
 	push AX
 	mov  AL, AH
@@ -25,17 +26,17 @@ Couper_Son:
 	call Couper_Banque
 	mov  DX, 38Ah
 	call Couper_Banque
-	mov  AX, 0500h
+	mov  AX, 0500h           ; DX vaut encore 38Ah : registre 105h = 0, mode OPL3 coupe
 	call Ecrire_Puce
 	ret
 Couper_Banque:
-	mov  AX, 0B000h
+	mov  AX, 0B000h          ; registres B0h a B8h = 0 : les 9 voix coupees
 Boucle_Notes:
 	call Ecrire_Puce
 	inc  AH
 	cmp  AH, 0B9h
 	jne  Boucle_Notes
-	mov  AX, 403Fh
+	mov  AX, 403Fh           ; registres 40h a 55h = 3Fh : volume au plus bas
 Boucle_Volumes:
 	call Ecrire_Puce
 	inc  AH

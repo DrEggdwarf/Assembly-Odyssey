@@ -23,6 +23,8 @@ public Pal_Premiere
 public Pal_Nombre
 public Pos_Ecran
 
+TAILLE_TAMPON    equ 512        ; on lit les fichiers par blocs de 512 octets
+
 donnees segment public
 
 Pal_Table        DW  0
@@ -32,7 +34,7 @@ Pal_Lecture      DW  0
 Pal_Reste        DW  0
 
 Fichier_Num      DW  0
-Fichier_Tampon   DB  512 dup(0)
+Fichier_Tampon   DB  TAILLE_TAMPON dup(0)
 Tampon_Pos       DW  0
 Tampon_Taille    DW  0
 
@@ -60,7 +62,7 @@ Boucle_Palette:
 	mov  CH, [BX+1]
 	mov  CL, [BX+2]
 	pop  BX
-	mov  AX, 1010h
+	mov  AX, 1010h          ; ecrire la couleur BX du DAC : DH, CH, CL = rouge, vert, bleu
 	int  10h
 	add  Pal_Lecture, 3
 	inc  BX
@@ -71,7 +73,7 @@ Boucle_Palette:
 Palette_Noire:
 	xor  BX, BX
 Boucle_Noire:
-	mov  AX, 1010h
+	mov  AX, 1010h          ; la meme : la couleur BX en noir
 	xor  DH, DH
 	xor  CX, CX
 	int  10h
@@ -81,19 +83,19 @@ Boucle_Noire:
 	ret
 
 Attendre_Trame:
-	mov  DX, 3DAh
+	mov  DX, 3DAh            ; registre d'etat VGA : le bit 3 ( 8 ) = retour vertical
 Attendre_Fin:
 	in   AL, DX
-	test AL, 8
+	and  AL, 8
 	jnz  Attendre_Fin
 Attendre_Debut:
 	in   AL, DX
-	test AL, 8
+	and  AL, 8
 	jz   Attendre_Debut
 	ret
 
 Ouvrir_Fichier:
-	mov  AX, 3D00h
+	mov  AX, 3D00h           ; DOS : ouvrir en lecture le fichier nomme en DX
 	int  21h
 	jc   Pas_Ouvert
 	mov  Fichier_Num, AX
@@ -112,9 +114,9 @@ Lire_Octet:
 	jb   Lire_Tampon
 	push CX
 	push DX
-	mov  AH, 3Fh
+	mov  AH, 3Fh             ; DOS : lire CX octets dans le tampon
 	mov  BX, Fichier_Num
-	mov  CX, 512
+	mov  CX, TAILLE_TAMPON
 	mov  DX, offset Fichier_Tampon
 	int  21h
 	pop  DX
@@ -135,7 +137,7 @@ Lire_Tampon:
 	ret
 
 Placer_Lecture:
-	mov  AX, 4200h
+	mov  AX, 4200h           ; DOS : se placer en CX:DX depuis le debut du fichier
 	mov  BX, Fichier_Num
 	int  21h
 	mov  Tampon_Pos, 0
@@ -143,7 +145,7 @@ Placer_Lecture:
 	ret
 
 Fermer_Fichier:
-	mov  AH, 3Eh
+	mov  AH, 3Eh             ; DOS : fermer
 	mov  BX, Fichier_Num
 	int  21h
 	ret
@@ -152,7 +154,7 @@ Afficher_Image:
 	call Ouvrir_Fichier
 	cmp  AL, 1
 	jne  Fin_Affichage
-	mov  CX, 128
+	mov  CX, 128             ; l'en-tete PCX fait 128 octets
 Sauter_Entete:
 	call Lire_Octet
 	loop Sauter_Entete
@@ -163,21 +165,19 @@ Lire_Paquet:
 	cmp  AH, 1
 	je   Fermer_Image
 	mov  Pixels_Restants, 1
-	cmp  AL, 0C0h
+	cmp  AL, 0C0h            ; les 2 bits du haut a 1 : un paquet repete
 	jb   Garder_Couleur
-	and  AL, 3Fh
+	and  AL, 3Fh             ; les 6 bits du bas : combien de pixels
 	mov  Pixels_Restants, AL
 	call Lire_Octet
 	cmp  AH, 1
 	je   Fermer_Image
-	cmp  Pixels_Restants, 0
-	je   Lire_Paquet
 Garder_Couleur:
 	mov  col, AL
 Dessiner_Pixel:
 	call PaintPxl
 	inc  cCX
-	cmp  cCX, 640
+	cmp  cCX, 640            ; l'image fait 640 x 480 ( VESA 101h )
 	jne  Pixel_Suivant
 	mov  cCX, 0
 	inc  cDX
@@ -212,13 +212,11 @@ Ligne_Tuile:
 
 Dessiner_Noir:
 	push ES
-	mov  AH, AL
-	mov  BX, AX
 	mov  AX, 0A000h
 	mov  ES, AX
 	mov  DI, Pos_Ecran
 	cld
-	mov  AX, BX
+	mov  AX, 0               ; noir sur les 2 pixels de chaque mot
 	mov  DX, TAILLE_CASE
 Ligne_Noire:
 	mov  CX, TAILLE_CASE / 2

@@ -7,20 +7,20 @@ include LIBGFX.INC
 include TAILLES.INC
 
 public Dessiner_Carte
-public Carte_Case
+public Carte_Sol
+public Carte_Mur
 public Carte_Joueur
 
-extrn Est_Mur:near
 extrn Joueur_Col:word
 extrn Joueur_Lig:word
 
 COULEUR_MUR      equ 77
 COULEUR_SOL      equ 78 ;( 77 = bleu, 78 = gris, 79 = rouge)
 COULEUR_JOUEUR   equ 79
-CADRE_X          equ CARTE_X - 6
+CADRE_X          equ CARTE_X - 6 ; 200 - 6 = 194 : 6 px de marge autour de la carte
 CADRE_Y          equ CARTE_Y - 6
-CADRE_LARGEUR    equ 123
-CADRE_HAUTEUR    equ 187
+CADRE_LARGEUR    equ 123        ; 194 + 123 = 317 : 58 colonnes de carte au plus
+CADRE_HAUTEUR    equ 187        ; 2 + 187 = 189
 
 donnees segment public
 Ancien_Col       DW  0
@@ -30,11 +30,6 @@ donnees ends
 code    segment public
 assume  cs:code,ds:donnees
 
-
-; Rx, Ry = coin haut gauche du rectangle
-; Rw = largeur
-; Rh = hauteur
-; col = couleur
 
 ; l'ecran ( 320 x 200 pixels ) :
 ;
@@ -56,6 +51,8 @@ Dessiner_Carte:
 	mov  Ry, CADRE_Y
 	mov  Rw, CADRE_LARGEUR
 	mov  Rh, CADRE_HAUTEUR
+	mov  col, 0              ; tout en noir : la carte repart a zero
+	call fillRect
 	mov  col, COULEUR_TEXTE
 	call Rectangle
 
@@ -66,14 +63,12 @@ Dessiner_Carte:
 	mov  Ancien_Lig, AX
 	ret
 
-Carte_Case:
-	call Est_Mur         ; niveau.asm
-	cmp  AL, 1
-	je   Case_Mur
-	mov  col, COULEUR_SOL ; 
+; CX, DX = une case vue : l'appelant sait deja si c'est du sol ou un mur
+Carte_Sol:
+	mov  col, COULEUR_SOL
 	call Poser_Carte
 	ret
-Case_Mur:
+Carte_Mur:
 	mov  col, COULEUR_MUR ; col = 77 > bleu
 	call Poser_Carte
 	ret
@@ -82,7 +77,7 @@ Case_Mur:
 Carte_Joueur:
 	mov  CX, Ancien_Col
 	mov  DX, Ancien_Lig
-	call Carte_Case      ; l'ancienne case redevient grise ou bleu
+	call Carte_Sol       ; l'ancienne case redevient grise ( le joueur n'est jamais sur un mur )
 	mov  CX, Joueur_Col
 	mov  DX, Joueur_Lig
 	mov  Ancien_Col, CX  ; pour le prochain pas
@@ -92,7 +87,8 @@ Carte_Joueur:
 	ret
 
 Poser_Carte: ; EX on est sur la case 11,43 donc cx = 11 et dx = 43
-
+	push CX                  ; fillRect ecrase CX et DX
+	push DX
 	mov  AX, CX          ; AX = 11
 	add  AX, AX          ; AX = 22
 	add  AX, CARTE_X     ; AX = 22 + 200 = 222
@@ -103,10 +99,12 @@ Poser_Carte: ; EX on est sur la case 11,43 donc cx = 11 et dx = 43
 	add  AX, CARTE_Y     ; AX = 86 + 8 = 94
 	mov  Ry, AX          ; Ry = 94
 
-	mov  Rw, 1           
+	mov  Rw, 1           ; 2 pixels : fillRect va jusqu'a Rx + Rw inclus
 	mov  Rh, 1          
 	; rx = 222, ry = 94 rw = 1, rh = 1
 	call fillRect
+	pop  DX
+	pop  CX
 	ret
 
 code    ends

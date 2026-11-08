@@ -5,10 +5,13 @@
 ; En-tete : largeur, hauteur (en cases), type (0 = statique, 1 = aleatoire)
 ;
 ; Ex: DB 11, 9, 0  =  11 x 9 cases, statique
-; Ex: DB 11, 9, 1  =  11 x 9 cases, aleatoire
+; Ex: DB 11, 11, 1  =  11 x 11 cases, aleatoire
 ;
 ; Statique  : l'en-tete, puis le trace (une ligne DB par rangee)
 ; Aleatoire : l'en-tete SEUL, pas de trace !!!!
+;             largeur et hauteur = un multiple de 4, plus 3 ( 43, 47, 51, 55 ) :
+;             la moitie est un petit labyrinthe impair, agrandi en murs de 3 ( genmaze.asm )
+;             pas 47, 55 ou 63 a la fois en largeur et en hauteur ( le D pourrait tomber sur le E )
 ;
 ; Lexique des type de case :
 ; [/!\] bit 7 = si la case a ete vu ou pas (0 ou 1)    [/!\]
@@ -77,10 +80,9 @@ lvl1    DB 57, 50, 0
         DB '#...........................###...#######################'
         DB '#########################################################'
 
-lvl2    DB 11, 9, 1   
+lvl2    DB 55, 51, 1
 
 ;****************************************
 ; Table des niveaux : adresse du niveau n = niveaux[(n - 1) x 2]
 ;****************************************
-NB_NIVEAUX equ 2
 niveaux DW lvl1, lvl2

@@ -1,4 +1,4 @@
-; Ecran titre : palette DAC (6 bits) et couleurs animees (durees en trames).
+; Ecran titre : palette DAC (6 bits) et couleurs animees (durees en trames de 1/70 s).
 
 TITRE_PAL_N equ 94
 titre_palette DB 0, 0, 0      ; 0 noir
@@ -47,9 +47,9 @@ titre_palette DB 0, 0, 0      ; 0 noir
               DB 56, 63, 59   ; 43 reflet 5 (anime)
               DB 39, 60, 49   ; 44 reflet 6 (anime)
               DB 21, 45, 37   ; 45 reflet 7 (anime)
-              DB 7, 9, 20     ; 46 halo exterieur (anime)
-              DB 10, 14, 28   ; 47 halo milieu (anime)
-              DB 15, 20, 37   ; 48 halo interieur (anime)
+              DB 7, 9, 20     ; 46 halo exterieur
+              DB 10, 14, 28   ; 47 halo milieu
+              DB 15, 20, 37   ; 48 halo interieur
               DB 30, 20, 9    ; 49 bois
               DB 18, 11, 4    ; 50 bois sombre
               DB 63, 57, 32   ; 51 flamme 1 (anime)
@@ -99,20 +99,20 @@ titre_palette DB 0, 0, 0      ; 0 noir
 ; Rotations : a chaque pas, l'entree k prend la couleur de base de l'entree (k + pas) mod N.
 REFLET_1 equ 38    ; reflets : entrees 38 a 45
 REFLET_N equ 8
-REFLET_TRAMES equ 6    ; 100 ms
+REFLET_TRAMES equ 6    ; 86 ms
 FLAMME_1 equ 51    ; flammes : entrees 51 a 53
 FLAMME_N equ 3
-FLAMME_TRAMES equ 7    ; 110 ms
+FLAMME_TRAMES equ 7    ; 100 ms
 FEUILLAGE_1 equ 73    ; feuillage : entrees 73 a 75
 FEUILLAGE_N equ 3
-FEUILLAGE_TRAMES equ 14    ; 240 ms
+FEUILLAGE_TRAMES equ 14    ; 200 ms
 FUMEE_1 equ 89    ; fumee : entrees 89 a 92
 FUMEE_N equ 4
-FUMEE_TRAMES equ 13    ; 220 ms
+FUMEE_TRAMES equ 13    ; 186 ms
 
 ; Sequences : l'entree prend tour a tour chaque couleur de sa table, en commencant au rang PHASE.
 ETOILE_A equ 9
-ETOILE_A_TRAMES equ 24    ; 400 ms
+ETOILE_A_TRAMES equ 24    ; 343 ms
 ETOILE_A_PHASE equ 0
 ETOILE_A_N equ 4
 etoile_a_seq DB 24, 24, 42    ; rang 0
@@ -120,12 +120,12 @@ etoile_a_seq DB 24, 24, 42    ; rang 0
              DB 58, 57, 63    ; rang 2
              DB 40, 40, 52    ; rang 3
 ETOILE_B equ 10
-ETOILE_B_TRAMES equ 24    ; 400 ms
+ETOILE_B_TRAMES equ 24    ; 343 ms
 ETOILE_B_PHASE equ 2
 ETOILE_B_N equ 4
 etoile_b_seq equ etoile_a_seq    ; meme table que A
 COEUR equ 35
-COEUR_TRAMES equ 20    ; 330 ms
+COEUR_TRAMES equ 20    ; 286 ms
 COEUR_PHASE equ 0
 COEUR_N equ 6
 coeur_seq DB 20, 30, 18       ; rang 0
@@ -135,7 +135,7 @@ coeur_seq DB 20, 30, 18       ; rang 0
           DB 49, 59, 43       ; rang 4
           DB 39, 51, 34       ; rang 5
 LANTERNE equ 93
-LANTERNE_TRAMES equ 9    ; 150 ms
+LANTERNE_TRAMES equ 9    ; 129 ms
 LANTERNE_PHASE equ 0
 LANTERNE_N equ 6
 lanterne_seq DB 63, 58, 42    ; rang 0
@@ -145,7 +145,7 @@ lanterne_seq DB 63, 58, 42    ; rang 0
              DB 63, 60, 49    ; rang 4
              DB 59, 52, 36    ; rang 5
 LUCIOLE_A equ 76
-LUCIOLE_A_TRAMES equ 16    ; 260 ms
+LUCIOLE_A_TRAMES equ 16    ; 229 ms
 LUCIOLE_A_PHASE equ 0
 LUCIOLE_A_N equ 6
 luciole_a_seq DB 10, 14, 6    ; rang 0
@@ -155,19 +155,14 @@ luciole_a_seq DB 10, 14, 6    ; rang 0
               DB 10, 14, 6    ; rang 4
               DB 10, 14, 6    ; rang 5
 LUCIOLE_B equ 77
-LUCIOLE_B_TRAMES equ 16    ; 260 ms
+LUCIOLE_B_TRAMES equ 16    ; 229 ms
 LUCIOLE_B_PHASE equ 3
 LUCIOLE_B_N equ 6
-luciole_b_seq DB 10, 14, 6    ; rang 0
-              DB 31, 40, 16   ; rang 1
-              DB 53, 63, 34   ; rang 2
-              DB 31, 40, 16   ; rang 3
-              DB 10, 14, 6    ; rang 4
-              DB 10, 14, 6    ; rang 5
+luciole_b_seq equ luciole_a_seq    ; meme table que A
 
 ; PRESS ANY KEY : texte et ombre clignotent ensemble en prenant la couleur du fond.
 PRESS equ 19
-PRESS_OMBRE equ 20
+PRESS_OMBRE equ 20    ; = PRESS + 1 : les deux se chargent ensemble
 PRESS_ETEINT_COULEUR equ 26
-PRESS_ALLUME equ 42    ; 700 ms
-PRESS_ETEINT equ 24    ; 400 ms
+PRESS_ALLUME equ 42    ; 600 ms
+PRESS_ETEINT equ 24    ; 343 ms
