@@ -10,3 +10,6 @@ assets/sounds/INTRO.VGM
 
 # Python
 __pycache__/
+
+# Videos de presentation : contiennent la musique de FF3, non diffusable
+future/*.mp4
