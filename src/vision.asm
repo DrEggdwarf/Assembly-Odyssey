@@ -31,7 +31,7 @@ Voisines         DW  0, -1          ; N
                  DW -1,  0          ; O
                  DW -1, -1          ; NO
 Voisine          DW  0         
-Voisine_Mur      DW  0          ; a part : Decor_Autour tourne a l'interieur de Murs_Autour
+Voisine_Mur      DW  0          ; a part : Decor_Autour est appelee dans la boucle de Murs_Autour, et remettrait Voisine a 0
 
 ; Decouvrir_Autour : 1 si la case a 1 pas est du sol
 Sol_N            DB  0

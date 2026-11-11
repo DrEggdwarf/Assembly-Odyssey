@@ -204,7 +204,7 @@ Dessiner_Tuile:
 Ligne_Tuile:
 	mov  CX, TAILLE_CASE / 2
 	rep  movsw
-	add  DI, LARGEUR_ECRAN - TAILLE_CASE
+	add  DI, LARGEUR_ECRAN - TAILLE_CASE ; ligne suivante, meme colonne ( DI a deja avance de 16 )
 	dec  DX
 	jnz  Ligne_Tuile
 	pop  ES
@@ -240,7 +240,7 @@ Ligne_Sprite:
 	mov  CX, Sprite_Largeur
 Pixel_Sprite:
 	mov  AL, [BX]
-	cmp  AL, 0
+	cmp  AL, 0               ; 0 = transparent : on garde la tuile dessous
 	je   Sprite_Suivant
 	mov  ES:[DI], AL
 Sprite_Suivant:

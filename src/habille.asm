@@ -245,6 +245,7 @@ Choisir_Tuile:
 	and  AL, 44h             ; 44h = E ( 4 ) + O ( 64 ) : murs a l'est et a l'ouest
 	cmp  AL, 44h
 	jne  Tuile_Variante
+; face entre deux murs : les troncs se repetent tous les 8 colonnes ( x and 7 )
 	mov  BX, CX
 	and  BX, 7
 	mov  AL, monde1_cycle[BX]
